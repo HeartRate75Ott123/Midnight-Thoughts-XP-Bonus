@@ -1,0 +1,9 @@
+{
+  "midnight_thoughts_xp_gift.summary.xp_bonus": "经验奖励",
+
+  "midnight_thoughts_xp_gift.message.title": "早安！这是你昨日的冒险总结：",
+  "midnight_thoughts_xp_gift.message.travel": "旅途奖励 → %s 点经验",
+  "midnight_thoughts_xp_gift.message.hunt": "猎魔奖励 → %s 点经验",
+  "midnight_thoughts_xp_gift.message.bonus": "早起奖励 → %s 点经验",
+  "midnight_thoughts_xp_gift.message.total": "共获得 %s 点经验！"
+}

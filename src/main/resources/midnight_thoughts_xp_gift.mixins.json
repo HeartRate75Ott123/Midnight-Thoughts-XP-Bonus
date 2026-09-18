@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.plumejade.midnightthoughtsxpgift.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DailyStatsManagerMixin"
+  ],
+  "client": [
+    "PlayerRowRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

@@ -1,0 +1,39 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+
+[[mixins]]
+config = "${mod_id}.mixins.json"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+logoFile = "midnight_thoughts_xp_gift.png"
+authors = "${mod_authors}"
+description = '''
+An addon for Midnight Thoughts that adds a daily experience reward.
+这是一个联动 Midnight Thoughts 的模组，添加了每日经验奖励，你可以通过数据包配置结算需要的阈值。
+'''
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# Midnight Thoughts is optional: without it this mod stays completely inert.
+[[dependencies.${mod_id}]]
+modId = "midnightthoughts"
+type = "optional"
+versionRange = "[1.4.2,)"
+ordering = "AFTER"
+side = "BOTH"

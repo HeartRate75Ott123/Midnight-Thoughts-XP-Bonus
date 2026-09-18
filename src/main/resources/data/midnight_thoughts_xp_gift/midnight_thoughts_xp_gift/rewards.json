@@ -1,0 +1,7 @@
+{
+  "blocks_per_distance_exp": 64,
+  "distance_exp": 10,
+  "kills_per_hunt_exp": 10,
+  "hunt_exp": 30,
+  "base_bonus": 16
+}

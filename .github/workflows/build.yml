@@ -1,0 +1,33 @@
+name: Build (disabled)
+
+# This workflow is intentionally disabled.
+#
+# The mod compiles against Midnight Thoughts, a third party mod jar that is NOT part of this repository
+# (see libs/README.md). A clean checkout therefore cannot be built by CI: `./gradlew build` fails with
+# missing symbols in the Mixin sources that reference the mt.* classes.
+#
+# To re enable it, either commit the dependency (make sure its license allows redistribution) or fetch it
+# from a secret/artifact URL before the build step, then restore `on: [push, pull_request]`.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain why nothing is built
+        run: |
+          echo "CI is disabled: libs/midnightthoughts-1.4.2+neoforge.1.21.1.jar must be provided manually."
+          echo "See libs/README.md for instructions."
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify the local dependency is present
+        run: |
+          if [ ! -f libs/midnightthoughts-1.4.2+neoforge.1.21.1.jar ]; then
+            echo "::error::libs/midnightthoughts-1.4.2+neoforge.1.21.1.jar is missing. See libs/README.md."
+            exit 1
+          fi
+          echo "Dependency found, the build can be run."

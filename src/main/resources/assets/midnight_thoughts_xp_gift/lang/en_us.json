@@ -1,0 +1,9 @@
+{
+  "midnight_thoughts_xp_gift.summary.xp_bonus": "XP Bonus",
+
+  "midnight_thoughts_xp_gift.message.title": "Good morning! Here is the summary of yesterday's adventure:",
+  "midnight_thoughts_xp_gift.message.travel": "Travel reward → %s XP",
+  "midnight_thoughts_xp_gift.message.hunt": "Hunt reward → %s XP",
+  "midnight_thoughts_xp_gift.message.bonus": "Early bird reward → %s XP",
+  "midnight_thoughts_xp_gift.message.total": "Total earned: %s XP!"
+}
