@@ -15,4 +15,9 @@ public final class ClientPayloadHandler {
     public static void handleXpReward(SyncXpRewardPacket payload) {
         ClientXpRewardStore.handle(payload);
     }
+
+    /** Drops the settled rewards again, called when Midnight Thoughts closes its summary screen. */
+    public static void handleSummaryClosed() {
+        ClientXpRewardStore.clear();
+    }
 }

@@ -119,6 +119,13 @@ neoForge {
 // "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+
+    // The unit tests exercise classes of this mod, and those reference Minecraft and NeoForge types
+    // which ModDevGradle only puts on the main compile classpath. Let the test compile classpath
+    // inherit it, so the tests can see the same API. Note that `testImplementation sourceSets...`
+    // / `extendsFrom` inside the dependencies block is not allowed since Gradle 8.
+    testCompileClasspath.extendsFrom compileClasspath
+    testRuntimeClasspath.extendsFrom compileClasspath
 }
 
 dependencies {
@@ -127,6 +134,19 @@ dependencies {
     // as an optional mod dependency (see src/main/templates/META-INF/neoforge.mods.toml).
     compileOnly files("libs/midnightthoughts-${midnightthoughts_version}.jar")
     localRuntime files("libs/midnightthoughts-${midnightthoughts_version}.jar")
+
+    // Unit tests for the pure logic (reward thresholds, the per player reward table and its packet
+    // codec). These do not need the game to run, see src/test/java.
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

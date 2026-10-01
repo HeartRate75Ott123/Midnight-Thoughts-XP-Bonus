@@ -1,8 +1,5 @@
 package com.plumejade.midnightthoughtsxpgift.client;
 
-import java.util.UUID;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -57,19 +54,22 @@ public final class XpRewardBadgeRenderer {
     /**
      * Draws the badge for one player row.
      *
-     * @param context the gui graphics of the summary screen
-     * @param font    the font used by the screen
-     * @param x       the left edge of the statistics area of the row
-     * @param y       the top edge of the statistics area of the row
-     * @param width   the width of the statistics area of the row
-     * @param height  the height of the statistics area of the row
-     * @param dims    the layout dimensions of the summary screen
+     * @param context    the gui graphics of the summary screen
+     * @param font       the font used by the screen
+     * @param playerName the name of the player this row belongs to; the reward is looked up by this
+     *                   name, so every row shows the value of its own player
+     * @param x          the left edge of the statistics area of the row
+     * @param y          the top edge of the statistics area of the row
+     * @param width      the width of the statistics area of the row
+     * @param height     the height of the statistics area of the row
+     * @param dims       the layout dimensions of the summary screen
      * @param animationStartTime the timestamp the row animation started at
-     * @param fadeAlpha the current fade in alpha of the screen
+     * @param fadeAlpha  the current fade in alpha of the screen
      */
     public static void render(
             GuiGraphics context,
             Font font,
+            String playerName,
             int x,
             int y,
             int width,
@@ -77,7 +77,13 @@ public final class XpRewardBadgeRenderer {
             SummaryDimensions dims,
             long animationStartTime,
             float fadeAlpha) {
-        SyncXpRewardPacket reward = getLocalReward();
+        SyncXpRewardPacket.Entry reward = ClientXpRewardStore.get(playerName);
+
+        if (reward == null) {
+            // Nothing was settled for this player (they did not sleep through the night). Drawing a
+            // misleading 0 would be worse than drawing nothing at all.
+            return;
+        }
 
         BadgeDimensions badgeDims = BadgeDimensions.calculate(dims);
         int badgeHeight = badgeDims.height();
@@ -103,7 +109,7 @@ public final class XpRewardBadgeRenderer {
         String theme = MidnightThoughtsConfig.getInstance().getUiTheme();
         int textColor = ThemeColors.getThemeColors(theme).statTextColor();
         float animationProgress = AnimationHelper.getProgress(animationStartTime);
-        int animatedValue = NumberFormatter.safeAnimatedValue(reward == null ? 0 : reward.total(), animationProgress);
+        int animatedValue = NumberFormatter.safeAnimatedValue(reward.total(), animationProgress);
 
         int textureWidth = 100;
         int textureHeight = 14;
@@ -127,16 +133,5 @@ public final class XpRewardBadgeRenderer {
         int valueWidth = (int) ((float) font.width(valueText) * textScale);
         int valueX = x + scaled.renderW() - padding - valueWidth;
         RenderUtils.renderScaledText(context, font, valueText, valueX, textY, color, textScale, true);
-    }
-
-    /** The reward that was settled for the local player, or {@code null} when there is none. */
-    private static SyncXpRewardPacket getLocalReward() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null) {
-            return null;
-        }
-
-        UUID playerId = minecraft.player.getUUID();
-        return ClientXpRewardStore.get(playerId);
     }
 }

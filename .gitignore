@@ -44,3 +44,8 @@ repo/
 # therefore NOT part of this repository. Download it yourself and drop it into libs/
 # before building. See the "Building" section of the README.
 libs/*.jar
+
+### Build / run artifacts at the repository root ###
+# `gradlew runServer` occasionally drops a log bundle next to the project instead of
+# inside run/.
+logs/

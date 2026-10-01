@@ -53,6 +53,17 @@ Midnight Thoughts' morning summary panel gets one extra entry:
 The entry is added with a Mixin into `mt.client.ui.summary.PlayerRowRenderer`, so it also appears next to the
 name of any other player on the panel.
 
+#### Multiple players
+
+Every player sees the value of **every** player, not their own value repeated on each row:
+
+* The server settles the whole night in one go and sends the complete table (player name → reward) to every
+  player that slept, right before Midnight Thoughts opens the panel.
+* The client caches that table keyed by player name and each row looks up the name of its own player.
+* A player that did not sleep through the night has no entry, so no badge is drawn on their row rather than a
+  misleading `0`. The cache is dropped as soon as the panel is closed, so the next night cannot show stale
+  numbers.
+
 ### Chat summary
 
 After waking up the player receives a chat message:
@@ -122,8 +133,12 @@ with or without Midnight Thoughts present.
 ## Development notes
 
 * `./gradlew runClient` / `./gradlew runServer` start a development client/server.
-* The two Mixin hooks are:
-  * `mt.server.DailyStatsManager#showDailySummary` — settles the rewards while the night's deltas are still
-    available and before Midnight Thoughts resets its counters.
-  * `mt.client.ui.summary.PlayerRowRenderer#render` — draws the extra panel entry.
+* `./gradlew test` runs the unit tests in `src/test/java`, which cover the reward thresholds, the per player
+  reward table of the client cache and the packet codec. They do not need the game to run.
+* The Mixin hooks are:
+  * `mt.server.DailyStatsManager#showDailySummary` — collects the players that slept, then settles the whole
+    night once the per player deltas are available and before Midnight Thoughts resets its counters.
+  * `mt.client.ui.summary.PlayerRowRenderer#render` — draws the extra panel entry, looked up by the row's
+    player name.
+  * `mt.client.ui.DailySummaryScreen#onClose` — drops the cached table of the night.
 * To see the panel entry, sleep through a night on a Midnight Thoughts enabled world.

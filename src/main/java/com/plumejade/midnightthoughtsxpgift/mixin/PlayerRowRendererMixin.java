@@ -64,6 +64,7 @@ public abstract class PlayerRowRendererMixin {
         XpRewardBadgeRenderer.render(
                 context,
                 textRenderer,
+                player.playerName(),
                 contentX,
                 contentY,
                 statsWidth,
