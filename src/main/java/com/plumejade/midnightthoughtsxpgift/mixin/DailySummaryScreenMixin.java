@@ -17,8 +17,9 @@ import com.plumejade.midnightthoughtsxpgift.client.ClientPayloadHandler;
  * sleep the following night). The cache is keyed by player name, so it is not tied to the local player in
  * any way.</p>
  *
- * <p>The target method is {@code Screen#onClose()V}, which Midnight Thoughts does not override, so the
- * injection resolves against the vanilla method it inherits.</p>
+ * <p>The target is {@code DailySummaryScreen#onClose()V}, which Midnight Thoughts overrides to send its
+ * {@code SummaryAcknowledgePacket} and then calls {@code Screen#onClose()}. Injecting at the head of that
+ * override therefore runs before the screen is actually dismissed.</p>
  */
 @Pseudo
 @Mixin(targets = "mt.client.ui.DailySummaryScreen", remap = false)
