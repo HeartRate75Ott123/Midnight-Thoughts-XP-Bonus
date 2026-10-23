@@ -89,7 +89,10 @@ public final class XpRewardManager {
      */
     static SyncXpRewardPacket.Entry settlementOf(NightSettlement night, XpRewardConfig config) {
         return settlementOf(
-                night.player().getGameProfile().getName(),
+                // Deliberately the same expression Midnight Thoughts uses to name the row
+                // (PlayerSummaryData / PlayerDailySummary are built from `player.getName().getString()`),
+                // so the server side key and the client side row name are guaranteed to be identical.
+                night.player().getName().getString(),
                 night.distanceCentimeters(),
                 night.mobKills(),
                 config);

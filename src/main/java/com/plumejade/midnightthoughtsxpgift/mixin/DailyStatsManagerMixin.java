@@ -60,7 +60,19 @@ public abstract class DailyStatsManagerMixin {
         midnightThoughtsXpGift$settledNights = new ArrayList<>(sleepingPlayers.size());
     }
 
-    @Inject(method = "showDailySummary", at = @At(value = "RETURN"))
+    /**
+     * Settles the collected nights just before Midnight Thoughts builds and sends its own summary packets.
+     *
+     * <p>This point (the single {@code determineMvp} call) is reached right after the first loop, so all
+     * deltas of the night are known, and it is <em>before</em> Midnight Thoughts' {@code DailySummaryPacket}
+     * is written to the connection. That guarantees the client already holds the reward table when the
+     * summary screen opens, instead of having to wait for a packet that arrives afterwards.</p>
+     */
+    @Inject(
+            method = "showDailySummary",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lmt/server/AchievementCalculator;determineMvp(Ljava/util/List;)Ljava/lang/String;"))
     private static void midnightThoughtsXpGift$settleCapturedPlayers(
             MinecraftServer server,
             Set<UUID> sleepingPlayers,
