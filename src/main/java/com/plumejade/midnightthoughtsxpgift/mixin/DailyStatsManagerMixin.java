@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import com.plumejade.midnightthoughtsxpgift.MidnightThoughtsXpGift;
+import com.plumejade.midnightthoughtsxpgift.server.NightSettlement;
 import com.plumejade.midnightthoughtsxpgift.server.XpRewardManager;
 
 import mt.server.DailyPlayerStats;
@@ -46,9 +47,9 @@ public abstract class DailyStatsManagerMixin {
     @Unique
     private static Set<UUID> midnightThoughtsXpGift$sleepingPlayers;
 
-    /** The players settled during the current run of {@code showDailySummary}. */
+    /** The activity settled during the current run of {@code showDailySummary}. */
     @Unique
-    private static List<ServerPlayer> midnightThoughtsXpGift$settledPlayers;
+    private static List<NightSettlement> midnightThoughtsXpGift$settledNights;
 
     @Inject(method = "showDailySummary", at = @At(value = "HEAD"))
     private static void midnightThoughtsXpGift$captureSleepingPlayers(
@@ -56,7 +57,7 @@ public abstract class DailyStatsManagerMixin {
             Set<UUID> sleepingPlayers,
             CallbackInfo callback) {
         midnightThoughtsXpGift$sleepingPlayers = new HashSet<>(sleepingPlayers);
-        midnightThoughtsXpGift$settledPlayers = new ArrayList<>(sleepingPlayers.size());
+        midnightThoughtsXpGift$settledNights = new ArrayList<>(sleepingPlayers.size());
     }
 
     @Inject(method = "showDailySummary", at = @At(value = "RETURN"))
@@ -65,15 +66,15 @@ public abstract class DailyStatsManagerMixin {
             Set<UUID> sleepingPlayers,
             CallbackInfo callback) {
         try {
-            List<ServerPlayer> settled = midnightThoughtsXpGift$settledPlayers;
-            if (settled != null && !settled.isEmpty()) {
-                XpRewardManager.settleAll(settled);
+            List<NightSettlement> nights = midnightThoughtsXpGift$settledNights;
+            if (nights != null && !nights.isEmpty()) {
+                XpRewardManager.settleAll(nights);
             }
         } catch (Throwable throwable) {
             MidnightThoughtsXpGift.LOGGER.error("Failed to settle the daily XP rewards", throwable);
         } finally {
             midnightThoughtsXpGift$sleepingPlayers = null;
-            midnightThoughtsXpGift$settledPlayers = null;
+            midnightThoughtsXpGift$settledNights = null;
         }
     }
 
@@ -98,15 +99,19 @@ public abstract class DailyStatsManagerMixin {
             }
 
             DailyPlayerStats.DailyDelta delta = stats.calculateDelta(player);
-            MidnightThoughtsXpGift.LOGGER.debug(
-                    "{} slept through the night: {} blocks travelled, {} monsters killed",
-                    player.getGameProfile().getName(),
-                    delta.distanceWalked(),
-                    delta.mobsKilled());
+            // The deltas Midnight Thoughts computed for this night. distanceWalked is in centimetres
+            // (the unit of the vanilla *_one_cm statistics), mobsKilled is the mob_kills delta.
+            NightSettlement night = new NightSettlement(player, delta.distanceWalked(), delta.mobsKilled());
 
-            List<ServerPlayer> settled = midnightThoughtsXpGift$settledPlayers;
-            if (settled != null) {
-                settled.add(player);
+            MidnightThoughtsXpGift.LOGGER.debug(
+                    "{} slept through the night: {} cm travelled, {} mobs killed",
+                    player.getGameProfile().getName(),
+                    night.distanceCentimeters(),
+                    night.mobKills());
+
+            List<NightSettlement> nights = midnightThoughtsXpGift$settledNights;
+            if (nights != null) {
+                nights.add(night);
             }
         } catch (Throwable throwable) {
             MidnightThoughtsXpGift.LOGGER.error("Failed to collect the night of {}", playerId, throwable);

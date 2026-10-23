@@ -1,7 +1,6 @@
 package com.plumejade.midnightthoughtsxpgift.server;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,11 +19,14 @@ import com.plumejade.midnightthoughtsxpgift.network.XpGiftNetwork;
 /**
  * Settles and pays out the daily experience rewards.
  *
- * <p>{@link #settleAll(Collection)} is called right when Midnight Thoughts settles the night (before it
- * resets its own daily counters). The payout itself is deferred to the next server tick via
- * {@link #payPending(MinecraftServer)} so that the reward packet reaches the client before Midnight
- * Thoughts opens its morning summary screen, and so that the "you gained experience" chat message is not
- * immediately overwritten by the wake up animation.</p>
+ * <p>{@link #settleAll(List)} is called right when Midnight Thoughts settles the night, using the
+ * statistics Midnight Thoughts itself computed for the night (see {@link NightSettlement}). Because those
+ * statistics are measured against a baseline that Midnight Thoughts persists to the world storage, the
+ * activity of a player that disconnected and reconnected before sleeping is <strong>not lost</strong>.</p>
+ *
+ * <p>The payout itself is deferred to the next server tick via {@link #payPending(MinecraftServer)} so that
+ * the reward packet reaches the client before Midnight Thoughts opens its morning summary screen, and so
+ * that the "you gained experience" chat message is not immediately overwritten by the wake up animation.</p>
  */
 public final class XpRewardManager {
 
@@ -47,21 +49,23 @@ public final class XpRewardManager {
      * who is looking at the screen. The complete table is therefore synchronised to each of the players
      * that slept.</p>
      *
-     * @param players the players whose night is being settled (may be empty)
+     * @param nights the settled activity of each player (may be empty)
      */
-    public static void settleAll(Collection<ServerPlayer> players) {
-        if (players.isEmpty()) {
+    public static void settleAll(List<NightSettlement> nights) {
+        if (nights.isEmpty()) {
             return;
         }
 
         XpRewardConfig config = XpRewardConfigReloadListener.getConfig();
-        List<SyncXpRewardPacket.Entry> entries = new ArrayList<>(players.size());
+        List<SyncXpRewardPacket.Entry> entries = new ArrayList<>(nights.size());
+        List<ServerPlayer> players = new ArrayList<>(nights.size());
 
-        for (ServerPlayer player : players) {
-            DailyXpStats.XpRewardSettlement settlement = DailyXpStats.get(player).settle(player, config);
-            SyncXpRewardPacket.Entry entry = SyncXpRewardPacket.Entry.of(player.getGameProfile().getName(), settlement);
+        for (NightSettlement night : nights) {
+            ServerPlayer player = night.player();
+            SyncXpRewardPacket.Entry entry = settlementOf(night, config);
 
             entries.add(entry);
+            players.add(player);
             PENDING.put(player.getUUID(), entry);
 
             MidnightThoughtsXpGift.LOGGER.debug(
@@ -78,6 +82,39 @@ public final class XpRewardManager {
         for (ServerPlayer player : players) {
             XpGiftNetwork.sendReward(player, payload);
         }
+    }
+
+    /**
+     * Computes the reward entry of one player from the activity Midnight Thoughts reported for the night.
+     */
+    static SyncXpRewardPacket.Entry settlementOf(NightSettlement night, XpRewardConfig config) {
+        return settlementOf(
+                night.player().getGameProfile().getName(),
+                night.distanceCentimeters(),
+                night.mobKills(),
+                config);
+    }
+
+    /**
+     * The pure reward computation: vanilla centimetres and mob kills in, one reward entry out.
+     *
+     * <p>Kept free of game objects so it can be unit tested directly.</p>
+     */
+    static SyncXpRewardPacket.Entry settlementOf(
+            String playerName,
+            int distanceCentimeters,
+            int mobKills,
+            XpRewardConfig config) {
+        int blocks = NightSettlement.blocksOf(distanceCentimeters);
+        int kills = Math.max(0, mobKills);
+
+        return new SyncXpRewardPacket.Entry(
+                playerName,
+                config.travelExp(blocks),
+                config.huntExp(kills),
+                config.baseBonus(),
+                blocks,
+                kills);
     }
 
     /**

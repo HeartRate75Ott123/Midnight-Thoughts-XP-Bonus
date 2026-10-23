@@ -9,7 +9,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 import com.plumejade.midnightthoughtsxpgift.MidnightThoughtsXpGift;
-import com.plumejade.midnightthoughtsxpgift.server.DailyXpStats;
 
 /**
  * Tells a client how much experience <em>every</em> player that slept through the night was awarded.
@@ -37,16 +36,6 @@ public record SyncXpRewardPacket(List<Entry> entries) implements CustomPacketPay
 
     /** A settlement that was granted to one player, for one night. */
     public record Entry(String playerName, int travelExp, int huntExp, int baseBonus, int distanceBlocks, int mobKills) {
-
-        public static Entry of(String playerName, DailyXpStats.XpRewardSettlement settlement) {
-            return new Entry(
-                    playerName,
-                    settlement.travelExp(),
-                    settlement.huntExp(),
-                    settlement.baseBonus(),
-                    settlement.distanceBlocks(),
-                    settlement.mobKills());
-        }
 
         /** The total amount of experience granted to this player. */
         public int total() {

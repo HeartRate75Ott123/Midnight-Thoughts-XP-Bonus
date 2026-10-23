@@ -30,11 +30,15 @@ happened since the previous sleep.
 | Hunt reward (猎魔奖励) | every 10 monsters killed → 30 XP | `kills_per_hunt_exp`, `hunt_exp` |
 | Early bird reward (早起奖励) | a flat bonus for having slept | `base_bonus` (16) |
 
-* The travelled distance counts **every** way of moving (walking, sprinting, swimming, flying, riding, being
-  pushed around, ...); it is accumulated from the player's actual position each tick.
-* The amount of slain monsters is read from the vanilla `minecraft.mob_kills` statistic, so it counts every
-  non-player entity the player killed (hostile monsters as well as animals) — the same counter vanilla uses for
-  the *Monster Hunter* advancement.
+* The addon does **not** keep its own counters. At settlement it takes the deltas Midnight Thoughts already
+  computed for the night: `DailyPlayerStats.DailyDelta#distanceWalked()` (the sum of all vanilla `*_one_cm`
+  distance statistics, in centimetres, so 100 cm = 1 block) and `#mobsKilled()` (the vanilla
+  `minecraft.mob_kills` delta). Every way of moving is covered because that is the vanilla distance statistic.
+* Because Midnight Thoughts measures those deltas against a baseline it **persists to the world storage** and
+  reloads on join, a player that disconnects and reconnects before sleeping keeps all of the night's activity.
+  The addon keeps no per player state that a logout could throw away.
+* The amount of slain monsters counts every non-player entity the player killed (hostile monsters as well as
+  animals) — the same counter vanilla uses for the *Monster Hunter* advancement.
 * The settled experience is granted to the player with `Player#giveExperiencePoints`.
 
 ### Morning summary panel entry
@@ -133,11 +137,12 @@ with or without Midnight Thoughts present.
 ## Development notes
 
 * `./gradlew runClient` / `./gradlew runServer` start a development client/server.
-* `./gradlew test` runs the unit tests in `src/test/java`, which cover the reward thresholds, the per player
-  reward table of the client cache and the packet codec. They do not need the game to run.
+* `./gradlew test` runs the unit tests in `src/test/java`, which cover the reward thresholds, the centimetre
+  to blocks conversion, the reconnect safety of the settlement, the per player reward table of the client cache
+  and the packet codec. They do not need the game to run.
 * The Mixin hooks are:
-  * `mt.server.DailyStatsManager#showDailySummary` — collects the players that slept, then settles the whole
-    night once the per player deltas are available and before Midnight Thoughts resets its counters.
+  * `mt.server.DailyStatsManager#showDailySummary` — collects the deltas Midnight Thoughts computed for each
+    player that slept, then settles the whole night once, before Midnight Thoughts resets its counters.
   * `mt.client.ui.summary.PlayerRowRenderer#render` — draws the extra panel entry, looked up by the row's
     player name.
   * `mt.client.ui.DailySummaryScreen#onClose` — drops the cached table of the night.

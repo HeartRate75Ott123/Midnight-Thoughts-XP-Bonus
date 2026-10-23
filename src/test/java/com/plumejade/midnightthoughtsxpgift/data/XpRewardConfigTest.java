@@ -53,8 +53,9 @@ class XpRewardConfigTest {
     @Test
     @DisplayName("an absurd distance stays exact instead of overflowing")
     void largeDistanceStaysExact() {
-        // DailyXpStats clamps the travelled distance to Integer.MAX_VALUE, which is 33_554_431 whole
-        // groups of 64 blocks, so the reward can never overflow with the shipped multipliers.
+        // Midnight Thoughts reports the distance as an int number of centimetres, i.e. at most
+        // Integer.MAX_VALUE, which is 33_554_431 whole groups of 64 blocks, so the reward can never
+        // overflow with the shipped multipliers.
         assertEquals(335_544_310, CONFIG.travelExp(Integer.MAX_VALUE));
     }
 
